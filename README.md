@@ -9,7 +9,7 @@ Long story short, here it is.
 <br>
 
 <h3>How to compile? Requirements? Where to download?</h3>
-None. This program will just do string and math operations and use some std::map(s) as opcode-to-format dictionaries to decode instructions, pretty much any C++ compiler on any OS will be able to produce a working executable: just open RISCV.cpp into yours (or download one, like DevC++ for windows) and compile.<br><br>
+No dependencies needed, just a C++ Compiler. This program will just do string and math operations and use some std::map(s) as opcode-to-format dictionaries to decode instructions, pretty much any C++ compiler on any OS will be able to produce a working executable: just open RISCV.cpp into yours (or download one, like DevC++ for windows) and compile.<br><br>
 Of course, i know most of those interested in this program will likely have Windows as OS, be students and not belong to the "obnoxious nerd" kind that haunts this website, and might even not know what to do with the RISCV.cpp file, so don't worry, <b> you can download the already compiled, ready-to-use .exe program (for Windows) on the Release section(on the right column).</b>
 <br>
 <h3>How to Use?</h3>
