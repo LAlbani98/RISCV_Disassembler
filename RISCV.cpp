@@ -6,6 +6,7 @@
 #include <cmath>
 #include <algorithm>
 #include <sstream>
+#include <fstream>
 using namespace std;
 
 
@@ -45,7 +46,7 @@ long long unsigned int hexStringToInt(string in){
 
 
 
-int main(){
+int main(int argc, char *argv[]){
 
 	map<int, string> opcode;
 	//map<int, string> func3_R33;
@@ -91,7 +92,7 @@ int main(){
 	opcode[0x67]="I_67";
 	opcode[0x03]="I_03";
 	opcode[0x13]="I_13";
-	opcode[0x13]="I_1b";
+	opcode[0x1b]="I_1b";
 	opcode[0x23]="S_23";
 	opcode[0x37]="U_37";
 	opcode[0x17]="U_17";
@@ -366,454 +367,543 @@ int main(){
 	int XOpcode;
 	string type;
 	int firsttime=1;
+	
+	/*In case a file is used*/
+	bool fileDetected=0;
+	std::ofstream Outbound;
+	std::ifstream Inbound; //Used to bind files.
+	string tempInstruction;
+	long long unsigned int InstrCount=0;
+	long long unsigned int InstrOk=0;
+	
+	if(argc>=3){
+		string temp=argv[1];
+		fileDetected=(temp=="-f")?1:0;
+	}
+	
 do{		
 		std::cout<<Title;
-		std::cout<<"RV64IFMD DISASSEMBLER - INSTRUCTION SET TO ASSEMBLY DICTIONARY v1.2. Realized via C++ by Lorenzo Albani.\nPlease contact lrnz.albani@gmail.com for any inquiries.\n";
+		std::cout<<" RV64IFMD DISASSEMBLER - INSTRUCTION SET TO ASSEMBLY DICTIONARY v1.3. Realized via C++ by Lorenzo Albani.\n Please contact lrnz.albani@gmail.com for any inquiries.\n";
 		if(firsttime){
-			std::cout<<endl<<"Disassembles most instructions.\nYou may input either binary or hex(provided they begin with '0x') instructions.\nEXAMPLE INPUT: '00000010000010010011001010000011' or '0x2093283'.";
+			std::cout<<endl<<" Disassembles most instructions.\n You may input either binary or hex(provided they begin with '0x') instructions.\n EXAMPLE INPUT: '00000010000010010011001010000011' or '0x2093283'.";
 			input="00000010000010010011001010000011";
 			firsttime=0;
 		}else{
 			std::cout<<endl;
 		}
 		
-		//std::bitset<32> instruction (std::string(input));
-		if(input[0]=='0' && (input[1]=='x'||input[1]=='X')){
-		Instruction=hexStringToInt(input);
-		}else{
-		Instruction=binaryStringToInt(input);
+		
+		 /*FILE DETECTION: Here files must be detected otherwise it may have unexpected beheaviour.*/
+		if(fileDetected){
+			std::cout<<endl<<endl<<endl<<" [NOTICE] -f (File Mode) Detected! Please wait as instructions are handled one by one.";
+		    string filename=argv[2];
+			Inbound.open(filename);
+			filename += ".out";
+			Outbound.open(filename,std::ios_base::app);
+			Inbound>>tempInstruction;
 		}
-		XOpcode=Instruction%128;
+		/*PREPARING UNIQUE OUTBOUND STREAM*/
+		std::ostream & OutStream=(fileDetected?  Outbound : std::cout);
 		
-		type=opcode[XOpcode];
-		std::bitset<32> x(Instruction);
-		std::bitset<7> y(XOpcode);
-		cout<<endl<<endl<<"=========================[ RESULTS: ]====================="<<endl<<endl<<" INSTRUCTION(BIN): "<<x;
-		cout<<endl<<" INSTRUCTION(HEX): 0x"<<std::hex<<Instruction;
-		cout<<endl<<" [TYPE]: "<<type<<endl<<" [OPCODE] HEX:"<<XOpcode<< " BIN:"<<y;
-		cout<<endl<<std::dec; //RE-FIX TO DECIMAL (IT WILL MESS UP FURTHER COUTS OTHERWISE)
-		
-		if(type=="I_03" || type=="I_13" || type=="I_73"|| type=="I_67"|| type=="I_1b"){
-			int Xrd=(Instruction%4096)/128;
-			int Xfunc3=(Instruction%32768)/4096;
-			int Xrs1=(Instruction%1048576)/32768;
-			int Imm12=(Instruction%4294967296)/1048576;
-			
-			if(type=="I_03"){
-				if(func3_I03[Xfunc3]==""){
-					std::cout<<endl<<"ERROR. The instruction type has been detected as \"I\" with opcode 0x03 (i.e load word/dword/byte Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+		do{
+			if(!fileDetected){
+				if(input[0]=='0' && (input[1]=='x'||input[1]=='X')){
+					Instruction=hexStringToInt(input);
 				}else{
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I03[Xfunc3]<<" "<<"x"<<Xrd<<", "<<Imm12<<"(x"<<Xrs1<<")";
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I03[Xfunc3]<<" "<<Registers[Xrd]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
-					
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-			}else if(type=="I_07"){
-				if(func3_I07[Xfunc3]==""){
-					std::cout<<endl<<"ERROR. The instruction type has been detected as \"I\" with opcode 0x03 (i.e load word/dword float Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}else{
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I07[Xfunc3]<<" "<<"f"<<Xrd<<", "<<Imm12<<"(x"<<Xrs1<<")";
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I07[Xfunc3]<<" "<<FloatRegisters[Xrd]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
-					
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-			}else if(type=="I_13"){
-				if(func3_I13[Xfunc3]==""){
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"I\" with opcode 0x13 (i.e addi/subi etc. Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}else if(func3_I13[Xfunc3]!="srai"){
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I13[Xfunc3]<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<Imm12;
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I13[Xfunc3]<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<Imm12;
-					
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}else{ //CASE SRAI/SRLI - Important.
-					
-					int Xrd=(Instruction%4096)/128;
-					int Xfunc3=(Instruction%32768)/4096;
-					int Xrs1=(Instruction%1048576)/32768;
-					int SHAMT=(Instruction%33554432)/1048576;
-					int Xfunc7=(Instruction%4294967296)/33554432;
-					string Instruction13_5;
-					if(Xfunc7==32){
-						Instruction13_5="srai";
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;	
-					
-					}else if(Xfunc7==0){
-						Instruction13_5="srli";
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<SHAMT;
-					}else{
-						Instruction13_5="ERROR";
-						std::cout<<" ERROR: The Instruction was detected to belong into SRAI/SRLI Subtype (Both OPCODE 0x13 and FUNC3 0x5, SRAI/SRLI may depend upon most significant 7 bits)\n but the given immediate matches none of them.\nNote that SRAI/SRLI instruction uses just the 5 least significant Immediate bits to perform the shift.";
-					}
-					
-					
-					std::bitset<7> Func7(Xfunc7);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs2(SHAMT);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					
-					std::cout<<endl<<endl<<"   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-			}else if(type=="I_1b"){
-				if(func3_I1b[Xfunc3]==""){
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"I\" with opcode 0x13 (i.e addiw/subiw etc. Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}else if(func3_I1b[Xfunc3]!="sraiw"){
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I1b[Xfunc3]<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<Imm12;
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I1b[Xfunc3]<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<Imm12;
-					
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}else{ //CASE SRAIW/SRLIW - Important.
-					
-					int Xrd=(Instruction%4096)/128;
-					int Xfunc3=(Instruction%32768)/4096;
-					int Xrs1=(Instruction%1048576)/32768;
-					int SHAMT=(Instruction%33554432)/1048576;
-					int Xfunc7=(Instruction%4294967296)/33554432;
-					string Instruction13_5;
-					if(Xfunc7==32){
-						Instruction13_5="sraiw";
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;	
-					
-					}else if(Xfunc7==0){
-						Instruction13_5="srliw";
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;
-					}else{
-						Instruction13_5="ERROR";
-						std::cout<<" ERROR: The Instruction was detected to belong into SRAI/SRLI Subtype (Both OPCODE 0x1b and FUNC3 0x5, SRAIW/SRLIW may depend upon most significant 7 bits)\n but the given immediate matches none of them.\nNote that SRAIW/SRLIW instruction uses just the 5 least significant Immediate bits to perform the shift.";
-					}
-					
-					
-					std::bitset<7> Func7(Xfunc7);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs2(SHAMT);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					
-					std::cout<<endl<<endl<<"   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-
-			}else if(type=="I_73"){ //ECALL/EBREAK
-				if(Xfunc3==0 &&  Xrs1==0 && Imm12==0 && Xrd==0){
-					std::cout<<endl<<" [ASSEMBLY]: ecall";
-					std::cout<<endl<<" [NOTICE]: System call params may not be specified in the binary instruction fields\n (func3,func7, both source(Rs1) and destination(Rd) registers are all set to 0).\n The Service number and the input argument are to be saved in registers a7 and a0 respectively,\n before performing the call.";
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-				else if(Xfunc3==0 &&  Xrs1==0 && Imm12==1 && Xrd==0){
-					std::cout<<endl<<" [ASSEMBLY]: ebreak";
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-				else if (Xfunc3==0 &&  Xrs1==0 && Imm12==258 && Xrd==0){ //Imm[11:0] 258 equals to func7==0x8 and rs2=0x2
-					std::cout<<endl<<" [ASSEMBLY]: sret";
-					std::cout<<endl<<" [NOTICE]: Format retrieved from \"RISC-V Privileged Instruction Set\" as this instruction usually is executed in Supervisor mode";
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-                	
-				}else{
-					std::cout<<endl<<"ERROR. The instruction type has been detected as \"I\" with opcode 0x73 (i.e Syscall Cathegory) but func3 code,Rs1 and Imm params match no known instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 					
-
-				}
-			}else if(type=="I_67"){
-				if(Xfunc3==0){
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<"jalr"<<" "<<"x"<<Xrd<<", "<<Imm12<<"(x"<<Xrs1<<")";
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<"jalr"<<" "<<Registers[Xrd]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
-					std::bitset<12> ImmA(Imm12);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					std::cout<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-				else{
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"I\" with opcode 0x67 (i.e jalr Cathegory) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 					
+					Instruction=binaryStringToInt(input);
 				}
 			}else{
-					std::cout<<endl<<"[ERROR] UNEXPECTED EXCEPTION DETECTED: The program entered a case it wasn't supposed to access.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN.";
+				
+				tempInstruction= "0x"+tempInstruction;
+				Instruction=hexStringToInt(tempInstruction);
 			}
-		}
-		else if(type=="R_33"||type=="R_3b"){
-			int Xrd=(Instruction%4096)/128;
-			int Xfunc3=(Instruction%32768)/4096;
-			int Xrs1=(Instruction%1048576)/32768;
-			int Xrs2=(Instruction%33554432)/1048576;
-			int Xfunc7=(Instruction%4294967296)/33554432;
-			if(type=="R_3b"){
-				if(func3_R3b.find(Xfunc3)==func3_R3b.end()){
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"R\" with opcode 0x3b but func3 code matches no instruction category (The instruction is specified via Func7 in type \"R\").\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}else{
-					if((func3_R3b[Xfunc3])[Xfunc7]==""){
-						std::cout<<endl<<" ERROR. The instruction type has been detected as \"R\", and func3 code has matched with an instruction category, but func7 code matches no valid instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-					}else{
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R3b[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"x"<<Xrs1<<", "<<" "<<"x"<<Xrs2;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R3b[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<Registers[Xrs1]<<", "<<" "<<Registers[Xrs2];
-						
-						std::bitset<7> Func7(Xfunc7);
-						std::bitset<5> Rd(Xrd);
-						std::bitset<5> Rs2(Xrs2);
-						std::bitset<5> Rs1(Xrs1);
-						std::bitset<3> func3(Xfunc3);
-						
-						std::cout<<endl<<endl<<"     FUNC7     RS2     RS1   FUNC3    RD     OPCODE";
-						std::cout<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-					}
-				}
+			
+			XOpcode=Instruction%128;
+			
+			type=opcode[XOpcode];
+			std::bitset<32> x(Instruction);
+			std::bitset<7> y(XOpcode);
+			if(fileDetected){
+				OutStream<<endl<<endl<<"=====================[Instruction No. "<<InstrCount<<" ]=====================";
 			}
 			else{
-				if(func3_R33.find(Xfunc3)==func3_R33.end()){
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"R\" with opcode 0x33 but func3 code matches no instruction category (The instruction is specified via Func7 in type \"R\").\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}else{
-					if((func3_R33[Xfunc3])[Xfunc7]==""){
-						std::cout<<endl<<" ERROR. The instruction type has been detected as \"R\", and func3 code has matched with an instruction category, but func7 code matches no valid instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+				OutStream<<endl<<endl<<"=========================[ RESULTS: ]=====================";
+			}
+			OutStream<<endl<<endl<<" INSTRUCTION(BIN): "<<x;
+			OutStream<<endl<<" INSTRUCTION(HEX): 0x"<<std::hex<<Instruction;
+			OutStream<<endl<<" [TYPE]: "<<type<<endl<<" [OPCODE] HEX:"<<XOpcode<< " BIN:"<<y;
+			OutStream<<endl<<std::dec; //RE-FIX TO DECIMAL (IT WILL MESS UP FURTHER COUTS OTHERWISE)
+			
+			if(type=="I_03" || type=="I_13" || type=="I_73"|| type=="I_67"|| type=="I_1b"){
+				int Xrd=(Instruction%4096)/128;
+				int Xfunc3=(Instruction%32768)/4096;
+				int Xrs1=(Instruction%1048576)/32768;
+				int Imm12=(Instruction%4294967296)/1048576;
+				
+				if(type=="I_03"){
+					if(func3_I03[Xfunc3]==""){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"I\" with opcode 0x03 (i.e load word/dword/byte Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
 					}else{
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R33[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"x"<<Xrs1<<", "<<" "<<"x"<<Xrs2;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R33[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<Registers[Xrs1]<<", "<<" "<<Registers[Xrs2];
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I03[Xfunc3]<<" "<<"x"<<Xrd<<", "<<Imm12<<"(x"<<Xrs1<<")";
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I03[Xfunc3]<<" "<<Registers[Xrd]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
 						
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}
+				}else if(type=="I_07"){
+					if(func3_I07[Xfunc3]==""){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"I\" with opcode 0x03 (i.e load word/dword float Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}else{
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I07[Xfunc3]<<" "<<"f"<<Xrd<<", "<<Imm12<<"(x"<<Xrs1<<")";
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I07[Xfunc3]<<" "<<FloatRegisters[Xrd]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
+						
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}
+				}else if(type=="I_13"){
+					if(func3_I13[Xfunc3]==""){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"I\" with opcode 0x13 (i.e addi/subi etc. Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}else if(func3_I13[Xfunc3]!="srai"){
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I13[Xfunc3]<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<Imm12;
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I13[Xfunc3]<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<Imm12;
+						
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}else{ //CASE SRAI/SRLI - Important.
+						
+						int Xrd=(Instruction%4096)/128;
+						int Xfunc3=(Instruction%32768)/4096;
+						int Xrs1=(Instruction%1048576)/32768;
+						int SHAMT=(Instruction%67108864)/1048576; 
+						int Xfunc6=(Instruction%4294967296)/67108864;
+						string Instruction13_5;
+						if(Xfunc6==32){
+							Instruction13_5="srai";
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<SHAMT;
+							InstrOk++;
+							std::bitset<6> Func7(Xfunc6);
+							std::bitset<5> Rd(Xrd);
+							std::bitset<6> Rs2(SHAMT);
+							std::bitset<5> Rs1(Xrs1);
+							std::bitset<3> func3(Xfunc3);
+							
+							OutStream<<endl<<endl<<"   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE";
+							OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						
+						}else if(Xfunc6==0){
+							Instruction13_5="srli";
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<SHAMT;
+							InstrOk++;
+							std::bitset<6> Func7(Xfunc6);
+							std::bitset<5> Rd(Xrd);
+							std::bitset<6> Rs2(SHAMT);
+							std::bitset<5> Rs1(Xrs1);
+							std::bitset<3> func3(Xfunc3);
+							
+							OutStream<<endl<<endl<<"   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE";
+							OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+
+						}else{
+							Instruction13_5="ERROR";
+							OutStream<<" [ERROR] The Instruction was detected to belong into SRAI/SRLI Subtype (Both OPCODE 0x13 and FUNC3 0x5,\n SRAI/SRLI may depend upon most significant 6 bits) but the given immediate matches none of them.\nNote that SRAI/SRLI instruction uses just the 5 least significant Immediate bits to perform the shift.";
+						}
+						
+						
+
+					}
+				}else if(type=="I_1b"){
+					if(func3_I1b[Xfunc3]==""){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"I\" with opcode 0x13 (i.e addiw/subiw etc. Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}else if(func3_I1b[Xfunc3]!="sraiw"){
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I1b[Xfunc3]<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<Imm12;
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I1b[Xfunc3]<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<Imm12;
+						
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}else{ //CASE SRAIW/SRLIW - Important.
+						
+						int Xrd=(Instruction%4096)/128;
+						int Xfunc3=(Instruction%32768)/4096;
+						int Xrs1=(Instruction%1048576)/32768;
+						int SHAMT=(Instruction%33554432)/1048576;
+						int Xfunc7=(Instruction%4294967296)/33554432;
+						string Instruction13_5;
+						if(Xfunc7==32){
+							Instruction13_5="sraiw";
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;	
+							InstrOk++;
+							std::bitset<7> Func7(Xfunc7);
+							std::bitset<5> Rd(Xrd);
+							std::bitset<5> Rs2(SHAMT);
+							std::bitset<5> Rs1(Xrs1);
+							std::bitset<3> func3(Xfunc3);
+							
+							OutStream<<endl<<endl<<"   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE";
+							OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						
+						}else if(Xfunc7==0){
+							Instruction13_5="srliw";
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;
+							InstrOk++;
+							std::bitset<7> Func7(Xfunc7);
+							std::bitset<5> Rd(Xrd);
+							std::bitset<5> Rs2(SHAMT);
+							std::bitset<5> Rs1(Xrs1);
+							std::bitset<3> func3(Xfunc3);
+							
+							OutStream<<endl<<endl<<"   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE";
+							OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						}else{
+							Instruction13_5="ERROR";
+							OutStream<<" [ERROR] The Instruction was detected to belong into SRAIW/SRLIW Subtype (Both OPCODE 0x1b and FUNC3 0x5,\n SRAIW/SRLIW may depend upon most significant 7 bits)\n but the given immediate matches none of them.\nNote that SRAIW/SRLIW instruction uses just the 5 least significant Immediate bits to perform the shift.";
+						}
+						
+						
+					}
+	
+				}else if(type=="I_73"){ //ECALL/EBREAK
+					if(Xfunc3==0 &&  Xrs1==0 && Imm12==0 && Xrd==0){
+						OutStream<<endl<<" [ASSEMBLY]: ecall";
+						OutStream<<endl<<" [NOTICE]: System call params may not be specified in the binary instruction fields\n (func3,func7, both source(Rs1) and destination(Rd) registers are all set to 0).\n The Service number and the input argument are to be saved in registers a7 and a0 respectively,\n before performing the call.";
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}
+					else if(Xfunc3==0 &&  Xrs1==0 && Imm12==1 && Xrd==0){
+						OutStream<<endl<<" [ASSEMBLY]: ebreak";
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}
+					else if (Xfunc3==0 &&  Xrs1==0 && Imm12==258 && Xrd==0){ //Imm[11:0] 258 equals to func7==0x8 and rs2=0x2
+						OutStream<<endl<<" [ASSEMBLY]: sret";
+						OutStream<<endl<<" [NOTICE]: Format retrieved from \"RISC-V Privileged Instruction Set\" as this instruction usually is executed in Supervisor mode";
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+	                	InstrOk++;
+					}else{
+						OutStream<<endl<<"ERROR. The instruction type has been detected as \"I\" with opcode 0x73 (i.e Syscall Cathegory) but func3 code,Rs1 and Imm params match no known instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 					
+	
+					}
+				}else if(type=="I_67"){
+					if(Xfunc3==0){
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<"jalr"<<" "<<"x"<<Xrd<<", "<<Imm12<<"(x"<<Xrs1<<")";
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<"jalr"<<" "<<Registers[Xrd]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
+						std::bitset<12> ImmA(Imm12);
+						std::bitset<5> Rd(Xrd);
+						std::bitset<5> Rs1(Xrs1);
+						std::bitset<3> func3(Xfunc3);
+						OutStream<<endl<<endl<<"     IMM[11:0]      RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						InstrOk++;
+					}
+					else{
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"I\" with opcode 0x67 (i.e jalr Cathegory) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 					
+					}
+				}else{
+						OutStream<<endl<<"[ERROR] UNEXPECTED EXCEPTION DETECTED: The program entered a case it wasn't supposed to access.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN.";
+				}
+			}
+			else if(type=="R_33"||type=="R_3b"){
+				int Xrd=(Instruction%4096)/128;
+				int Xfunc3=(Instruction%32768)/4096;
+				int Xrs1=(Instruction%1048576)/32768;
+				int Xrs2=(Instruction%33554432)/1048576;
+				int Xfunc7=(Instruction%4294967296)/33554432;
+				if(type=="R_3b"){
+					if(func3_R3b.find(Xfunc3)==func3_R3b.end()){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\" with opcode 0x3b but func3 code matches no instruction category (The instruction is specified via Func7 in type \"R\").\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}else{
+						if((func3_R3b[Xfunc3])[Xfunc7]==""){
+							OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\", and func3 code has matched with an instruction category, but func7 code matches no valid instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+						}else{
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R3b[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"x"<<Xrs1<<", "<<" "<<"x"<<Xrs2;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R3b[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<Registers[Xrs1]<<", "<<" "<<Registers[Xrs2];
+							
+							std::bitset<7> Func7(Xfunc7);
+							std::bitset<5> Rd(Xrd);
+							std::bitset<5> Rs2(Xrs2);
+							std::bitset<5> Rs1(Xrs1);
+							std::bitset<3> func3(Xfunc3);
+							
+							OutStream<<endl<<endl<<"     FUNC7     RS2     RS1   FUNC3    RD     OPCODE";
+							OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+							InstrOk++;
+						}
+					}
+				}
+				else{
+					if(func3_R33.find(Xfunc3)==func3_R33.end()){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\" with opcode 0x33 but func3 code matches no instruction category (The instruction is specified via Func7 in type \"R\").\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}else{
+						if((func3_R33[Xfunc3])[Xfunc7]==""){
+							OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\", and func3 code has matched with an instruction category, but func7 code matches no valid instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+						}else{
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R33[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"x"<<Xrs1<<", "<<" "<<"x"<<Xrs2;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R33[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<Registers[Xrs1]<<", "<<" "<<Registers[Xrs2];
+							
+							std::bitset<7> Func7(Xfunc7);
+							std::bitset<5> Rd(Xrd);
+							std::bitset<5> Rs2(Xrs2);
+							std::bitset<5> Rs1(Xrs1);
+							std::bitset<3> func3(Xfunc3);
+							
+							OutStream<<endl<<endl<<"     FUNC7     RS2     RS1   FUNC3    RD     OPCODE";
+							OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+							InstrOk++;
+						}
+					}
+				}
+			}
+			else if(type=="R_53"){
+				int Xrd=(Instruction%4096)/128;
+				int Xfunc3=(Instruction%32768)/4096;
+				int Xrs1=(Instruction%1048576)/32768;
+				int Xrs2=(Instruction%33554432)/1048576;
+				int Xfunc7=(Instruction%4294967296)/33554432;
+				if(func3_R53.find(Xfunc3)==func3_R53.end()){
+					OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category) but func3 code matches no instruction category (The instruction is specified via Func7 in type \"R\").\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+				}else{
+					if((func3_R53[Xfunc3])[Xfunc7]==""){
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category), and func3 code has matched with an instruction category, but func7 code matches no valid instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}else{
+						int tempCode=Xfunc7;
+						//TWO OPERANDS SECTION
+						if(tempCode==0x10|| tempCode==0x11 || tempCode==0x20 || tempCode==0x21 || tempCode==0x60 || tempCode==0x61 || tempCode==0x68 || tempCode==0x69||tempCode==0x70||tempCode==0x71||tempCode==0x78||tempCode==0x79){
+							if(tempCode==0x21){
+								//CASE TEMPCODE 21
+								if(Xrs2==0){
+									OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1;
+									OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
+									InstrOk++;
+								}else{
+									OutStream<<endl<<"ERROR. The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category),func3 and func7 code match 'fcvt.d.s' yet rs2 code won't match(supposed to be 0).\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+	
+								}
+							}
+							else if(tempCode==0x20){
+								//CASE TEMPCODE 20
+								if(Xrs2==1){
+									OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1;
+									OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
+									InstrOk++;
+								}else{
+									OutStream<<endl<<" [ERROR] The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category),func3 and func7 code match 'fcvt.s.d' yet rs2 code won't match(supposed to be 1).\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+								}	
+							}else if(tempCode==0x60||tempCode==0x70||tempCode==0x61||tempCode==0x71){
+								//Ist Operand is from Integer Register
+								OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"f"<<Xrs1;
+								OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
+								InstrOk++;							
+							
+							}else if(tempCode==0x68||tempCode==0x69||tempCode==0x78||tempCode==0x79){
+								//IInd Operand is from Integer Register
+								OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"x"<<Xrs1;
+								OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<Registers[Xrs1];
+								InstrOk++;						
+							
+							}
+							else{
+								OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1;
+								OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
+								InstrOk++;
+							}
+							
+						}else if (tempCode==0x50||tempCode==0x51){
+						//THREE OPERANDS yet Ist from Integer Register
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"f"<<Xrs1<<", "<<" "<<"f"<<Xrs2;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<FloatRegisters[Xrs1]<<", "<<" "<<FloatRegisters[Xrs2];
+							InstrOk++;
+						}else{
+							//All the remaining.
+							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1<<", "<<" "<<"f"<<Xrs2;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1]<<", "<<" "<<FloatRegisters[Xrs2];
+							InstrOk++;
+						}
 						std::bitset<7> Func7(Xfunc7);
 						std::bitset<5> Rd(Xrd);
 						std::bitset<5> Rs2(Xrs2);
 						std::bitset<5> Rs1(Xrs1);
 						std::bitset<3> func3(Xfunc3);
 						
-						std::cout<<endl<<endl<<"     FUNC7     RS2     RS1   FUNC3    RD     OPCODE";
-						std::cout<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
+						OutStream<<endl<<endl<<"     FUNC7     RS2     RS1   FUNC3    RD     OPCODE";
+						OutStream<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
 					}
 				}
 			}
-		}
-		else if(type=="R_53"){
-			int Xrd=(Instruction%4096)/128;
-			int Xfunc3=(Instruction%32768)/4096;
-			int Xrs1=(Instruction%1048576)/32768;
-			int Xrs2=(Instruction%33554432)/1048576;
-			int Xfunc7=(Instruction%4294967296)/33554432;
-			if(func3_R53.find(Xfunc3)==func3_R53.end()){
-				std::cout<<endl<<" ERROR. The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category) but func3 code matches no instruction category (The instruction is specified via Func7 in type \"R\").\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-			}else{
-				if((func3_R53[Xfunc3])[Xfunc7]==""){
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category), and func3 code has matched with an instruction category, but func7 code matches no valid instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+	
+			
+			else if(type=="S_23"||type=="S_27"){
+				int Imm4_0=(Instruction%4096)/128;
+				int Xfunc3=(Instruction%32768)/4096;
+				int Xrs1=(Instruction%1048576)/32768;
+				int Xrs2=(Instruction%33554432)/1048576;
+				int Imm11_5=(Instruction%4294967296)/33554432;
+				
+				int Imm12=Imm11_5*32+Imm4_0;
+				if(type=="S_23"){
+					if(func3_S23[Xfunc3]==""){
+						
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"S\" but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+					}
+					else{
+				
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]:  "<<func3_S23[Xfunc3]<<" "<<"x"<<Xrs2<<", "<<Imm12<<"(x"<<Xrs1<<")";
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_S23[Xfunc3]<<" "<<Registers[Xrs2]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
+						InstrOk++;
+					}
 				}else{
-					int tempCode=Xfunc7;
-					//TWO OPERANDS SECTION
-					if(tempCode==0x10|| tempCode==0x11 || tempCode==0x20 || tempCode==0x21 || tempCode==0x60 || tempCode==0x61 || tempCode==0x68 || tempCode==0x69||tempCode==0x70||tempCode==0x71||tempCode==0x78||tempCode==0x79){
-						if(tempCode==0x21){
-							//CASE TEMPCODE 21
-							if(Xrs2==0){
-								std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1;
-								std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
-							}else{
-								std::cout<<endl<<"ERROR. The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category),func3 and func7 code match 'fcvt.d.s' yet rs2 code won't match(supposed to be 0).\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-
-							}
-						}
-						else if(tempCode==0x20){
-							//CASE TEMPCODE 20
-							if(Xrs2==1){
-								std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1;
-								std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
-							}else{
-								std::cout<<endl<<"ERROR. The instruction type has been detected as \"R\" with opcode 0x53 (Floating Point category),func3 and func7 code match 'fcvt.s.d' yet rs2 code won't match(supposed to be 1).\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-							}	
-						}else if(tempCode==0x60||tempCode==0x70||tempCode==0x61||tempCode==0x71){
-							//Ist Operand is from Integer Register
-							std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"f"<<Xrs1;
-							std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];							
-						
-						}else if(tempCode==0x68||tempCode==0x69||tempCode==0x78||tempCode==0x79){
-							//IInd Operand is from Integer Register
-							std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"x"<<Xrs1;
-							std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<Registers[Xrs1];							
-						
-						}
-						else{
-							std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1;
-							std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1];
-						}
-						
-					}else if (tempCode==0x50||tempCode==0x51){
-					//THREE OPERANDS yet Ist from Integer Register
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"x"<<Xrd<<", "<<" "<<"f"<<Xrs1<<", "<<" "<<"f"<<Xrs2;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<Registers[Xrd]<<", "<<" "<<FloatRegisters[Xrs1]<<", "<<" "<<FloatRegisters[Xrs2];
-					}else{
-						//All the remaining.
-						std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<"f"<<Xrd<<", "<<" "<<"f"<<Xrs1<<", "<<" "<<"f"<<Xrs2;
-						std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<(func3_R53[Xfunc3])[Xfunc7]<<" "<<FloatRegisters[Xrd]<<", "<<" "<<FloatRegisters[Xrs1]<<", "<<" "<<FloatRegisters[Xrs2];
+					if(func3_S27[Xfunc3]==""){	
+						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"S\" but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
 					}
-					std::bitset<7> Func7(Xfunc7);
-					std::bitset<5> Rd(Xrd);
-					std::bitset<5> Rs2(Xrs2);
-					std::bitset<5> Rs1(Xrs1);
-					std::bitset<3> func3(Xfunc3);
-					
-					std::cout<<endl<<endl<<"     FUNC7     RS2     RS1   FUNC3    RD     OPCODE";
-					std::cout<<endl<<"  [ "<<Func7<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<Rd<<" | "<<y<<" ] ";
-				}
-			}
-		}
-
-		
-		else if(type=="S_23"||type=="S_27"){
-			int Imm4_0=(Instruction%4096)/128;
-			int Xfunc3=(Instruction%32768)/4096;
-			int Xrs1=(Instruction%1048576)/32768;
-			int Xrs2=(Instruction%33554432)/1048576;
-			int Imm11_5=(Instruction%4294967296)/33554432;
-			
-			int Imm12=Imm11_5*32+Imm4_0;
-			if(type=="S_23"){
-				if(func3_S23[Xfunc3]==""){
-					
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"S\" but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}
-				else{
-			
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]:  "<<func3_S23[Xfunc3]<<" "<<"x"<<Xrs2<<", "<<Imm12<<"(x"<<Xrs1<<")";
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_S23[Xfunc3]<<" "<<Registers[Xrs2]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
-				}
-			}else{
-				if(func3_S27[Xfunc3]==""){	
-					std::cout<<endl<<" ERROR. The instruction type has been detected as \"S\" but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-				}
-				else{
-			
-					std::cout<<endl<<" [ASSEMBLY (Via RegNum)]:  "<<func3_S27[Xfunc3]<<" "<<"f"<<Xrs2<<", "<<Imm12<<"(x"<<Xrs1<<")";
-					std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_S27[Xfunc3]<<" "<<FloatRegisters[Xrs2]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
-				}		
-			}
-			std::bitset<7> ImmA(Imm11_5);
-			std::bitset<5> ImmB(Imm4_0);
-			std::bitset<5> Rs2(Xrs2);
-			std::bitset<5> Rs1(Xrs1);
-			std::bitset<3> func3(Xfunc3);
-			
-			std::cout<<endl<<endl<<"   IMM[11:5]   RS2     RS1   FUNC3 IMM[4:0]  OPCODE";
-			std::cout<<endl<<"  [ "<<ImmA<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<ImmB<<" | "<<y<<" ] ";
-		}
-		
-		else if(type=="B"){
-			int Imm11=(Instruction%256)/128;
-			int Imm4_1=(Instruction%4096)/256;
-			int Xfunc3=(Instruction%32768)/4096;
-			int Xrs1=(Instruction%1048576)/32768;
-			int Xrs2=(Instruction%33554432)/1048576;
-			int Imm10_5=(Instruction%2147483648)/33554432;
-			int Imm12=(Instruction%4294967296)/2147483648;
-			
-			int Imm13=Imm12*4096+Imm11*2048+Imm10_5*32+Imm4_1*2; //13 bit [12:1]
-			
-			if(func3_B63[Xfunc3]==""){
+					else{
 				
-				std::cout<<endl<<" ERROR. The instruction type has been detected as \"B\" (or \"SB\") but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
-		
-
-			}else{
-				
-				std::bitset<1> ImmA(Imm12);
-				std::bitset<6> ImmB(Imm10_5);
-				std::bitset<4> ImmC(Imm4_1);
-				std::bitset<1> ImmD(Imm11);
+						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]:  "<<func3_S27[Xfunc3]<<" "<<"f"<<Xrs2<<", "<<Imm12<<"(x"<<Xrs1<<")";
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_S27[Xfunc3]<<" "<<FloatRegisters[Xrs2]<<", "<<Imm12<<"("<<Registers[Xrs1]<<")";
+						InstrOk++;
+					}		
+				}
+				std::bitset<7> ImmA(Imm11_5);
+				std::bitset<5> ImmB(Imm4_0);
 				std::bitset<5> Rs2(Xrs2);
 				std::bitset<5> Rs1(Xrs1);
 				std::bitset<3> func3(Xfunc3);
 				
+				OutStream<<endl<<endl<<"   IMM[11:5]   RS2     RS1   FUNC3 IMM[4:0]  OPCODE";
+				OutStream<<endl<<"  [ "<<ImmA<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<ImmB<<" | "<<y<<" ] ";
+			}
+			
+			else if(type=="B"){
+				int Imm11=(Instruction%256)/128;
+				int Imm4_1=(Instruction%4096)/256;
+				int Xfunc3=(Instruction%32768)/4096;
+				int Xrs1=(Instruction%1048576)/32768;
+				int Xrs2=(Instruction%33554432)/1048576;
+				int Imm10_5=(Instruction%2147483648)/33554432;
+				int Imm12=(Instruction%4294967296)/2147483648;
 				
-				std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_B63[Xfunc3]<<" "<<"x"<<Xrs1<<", "<<"x"<<Xrs2<<", "<<Imm13;
-				std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_B63[Xfunc3]<<" "<<Registers[Xrs1]<<", "<<Registers[Xrs2]<<", "<<Imm13;
+				int Imm13=Imm12*4096+Imm11*2048+Imm10_5*32+Imm4_1*2; //13 bit [12:1]
 				
-				std::cout<<endl<<endl<<"WARNING: B instruction jumps are shown in assembly by the means of a label. EX: Beq x5,x4, Label1.";
-				std::cout<<endl<<"The Integer number you see is a direct translation from the Binary Instruction (taking account of the sparse placement of B format) of the amount of Bytes to jump.";
-				std::cout<<endl<<endl<<" IMM[12,10:5]  RS2     RS1   FUNC3 IMM[4:0,11] OPCODE";
-				std::cout<<endl<<"  [ "<<ImmA<<" "<<ImmB<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<ImmC<<" "<<ImmD<<" | "<<y<<" ] ";
+				if(func3_B63[Xfunc3]==""){
+					
+					OutStream<<endl<<" [ERROR] The instruction type has been detected as \"B\" (or \"SB\") but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
+			
+	
+				}else{
+					
+					std::bitset<1> ImmA(Imm12);
+					std::bitset<6> ImmB(Imm10_5);
+					std::bitset<4> ImmC(Imm4_1);
+					std::bitset<1> ImmD(Imm11);
+					std::bitset<5> Rs2(Xrs2);
+					std::bitset<5> Rs1(Xrs1);
+					std::bitset<3> func3(Xfunc3);
+					
+					
+					OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_B63[Xfunc3]<<" "<<"x"<<Xrs1<<", "<<"x"<<Xrs2<<", "<<Imm13;
+					OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_B63[Xfunc3]<<" "<<Registers[Xrs1]<<", "<<Registers[Xrs2]<<", "<<Imm13;
+					
+					OutStream<<endl<<endl<<"WARNING: B instruction jumps are shown in assembly by the means of a label. EX: Beq x5,x4, Label1.";
+					OutStream<<endl<<"The Integer number you see is a direct translation from the Binary Instruction (taking account of the sparse placement of B format) of the amount of Bytes to jump.";
+					OutStream<<endl<<endl<<" IMM[12,10:5]  RS2     RS1   FUNC3 IMM[4:0,11] OPCODE";
+					OutStream<<endl<<"  [ "<<ImmA<<" "<<ImmB<<" | "<<Rs2<<" | "<<Rs1<<" | "<<func3<<" | "<<ImmC<<" "<<ImmD<<" | "<<y<<" ] ";
+					InstrOk++;
+					
+				}
 				
 				
 			}
 			
+			else if(type=="U_37"||type=="U_17"){
+				int Xrd=(Instruction%4096)/128;
+				int Imm31_12=(Instruction%4294967296)/4096;
+				std::bitset<5> Rd(Xrd);
+				std::bitset<20> z(Imm31_12);
+				string tempCode=(type=="U_37")?"lui":"auipc";
+				OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<tempCode<<" "<<"x"<<Xrd<<", "<<std::hex<<"0x"<<Imm31_12<<std::dec;
+				OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<tempCode<<" "<<Registers[Xrd]<<", "<<std::hex<<"0x"<<Imm31_12<<std::dec;
+				OutStream<<endl<<endl<<"       IMM[31:12]           RD    OPCODE";
+				OutStream<<endl<<" [ "<<z<<" | "<<Rd<<" | "<< y<<" ] ";
+				InstrOk++;
+			}
+			else if(type=="J_6F"){
+				int Xrd=(Instruction%4096)/128;
+				int Imm20_1=(Instruction)/4096;
+				int Imm19_12=Imm20_1%256;
+				int Imm11=(Imm20_1%512)/256;
+				int Imm10_1=(Imm20_1%524288)/512;
+				int Imm20=(Imm20_1/524288);
+				long long int Offset= Imm10_1*2 + Imm11*2048 + Imm19_12*4096+ Imm20*1048576;
+				
+				std::bitset<1> ImmA(Imm20);
+				std::bitset<10> ImmB(Imm10_1);
+				std::bitset<1> ImmC(Imm11);
+				std::bitset<8> ImmD(Imm19_12);
+				std::bitset<5> Rd(Xrd);
+				
+				OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<"jal"<<" "<<"x"<<Xrd<<", "<<Offset;
+				OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<"jal"<<" "<<Registers[Xrd]<<", "<<Offset;
+				OutStream<<endl<<endl<<" IMM[20, 10:1, 11 , 19:12]     RD    OPCODE";
+				OutStream<<endl<<" [ "<<ImmA<<" "<<ImmB<<" "<<ImmC<<" "<<ImmD<<" | "<<Rd<<" | "<< y<<" ] ";
+				InstrOk++;
+				
+				
+				
+			}
+			else{
+				OutStream<<" [ERROR] UNVALID OPCODE. \nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN.";
+			}
 			
+			InstrCount++;
+			Inbound>>tempInstruction;
+		}while(fileDetected && !Inbound.eof());
+		if(fileDetected){ 
+			std::cout<<endl<<" [NOTICE] File successfully scanned. "<<InstrCount<<" instruction(s) detected. "<<InstrOk<<" successfully disassembled."<<endl<<endl;  
+			Outbound.close();
 		}
-		
-		else if(type=="U_37"||type=="U_17"){
-			int Xrd=(Instruction%4096)/128;
-			int Imm31_12=(Instruction%4294967296)/4096;
-			std::bitset<5> Rd(Xrd);
-			std::bitset<20> z(Imm31_12);
-			string tempCode=(type=="U_37")?"lui":"auipc";
-			std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<tempCode<<" "<<"x"<<Xrd<<", "<<std::hex<<"0x"<<Imm31_12<<std::dec;
-			std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<tempCode<<" "<<Registers[Xrd]<<", "<<std::hex<<"0x"<<Imm31_12<<std::dec;
-			std::cout<<endl<<endl<<"       IMM[31:12]           RD    OPCODE";
-			std::cout<<endl<<" [ "<<z<<" | "<<Rd<<" | "<< y<<" ] ";
-			
+		else{	
+			std::cout<<endl<<"========================================================"<<endl<<endl<<"[INPUT BINARY INSTRUCTION]:";
+			cin.getline(input2,99);
+			input=input2;
+			system("cls");
 		}
-		else if(type=="J_6F"){
-			int Xrd=(Instruction%4096)/128;
-			int Imm20_1=(Instruction)/4096;
-			int Imm19_12=Imm20_1%256;
-			int Imm11=(Imm20_1%512)/256;
-			int Imm10_1=(Imm20_1%524288)/512;
-			int Imm20=(Imm20_1/524288);
-			long long int Offset= Imm10_1*2 + Imm11*2048 + Imm19_12*4096+ Imm20*1048576;
-			
-			std::bitset<1> ImmA(Imm20);
-			std::bitset<10> ImmB(Imm10_1);
-			std::bitset<1> ImmC(Imm11);
-			std::bitset<8> ImmD(Imm19_12);
-			std::bitset<5> Rd(Xrd);
-			
-			std::cout<<endl<<" [ASSEMBLY (Via RegNum)]: "<<"jal"<<" "<<"x"<<Xrd<<", "<<Offset;
-			std::cout<<endl<<" [ASSEMBLY (Via RegName)]: "<<"jal"<<" "<<Registers[Xrd]<<", "<<Offset;
-			std::cout<<endl<<endl<<" IMM[20, 10:1, 11 , 19:12]     RD    OPCODE";
-			std::cout<<endl<<" [ "<<ImmA<<" "<<ImmB<<" "<<ImmC<<" "<<ImmD<<" | "<<Rd<<" | "<< y<<" ] ";
-			
-			
-			
-		}
-		else{
-			std::cout<<"ERROR. UNVALID OPCODE. \nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN.";
-		}
-		
-		std::cout<<endl<<"========================================================"<<endl<<endl<<"[INPUT BINARY INSTRUCTION]:";
-		cin.getline(input2,99);
-		input=input2;
-		
-		system("cls");
-}while(1);
+	}while(!fileDetected);
 	
 	
 }
