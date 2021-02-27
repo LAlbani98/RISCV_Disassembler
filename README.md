@@ -1,14 +1,19 @@
 # RISCV_Disassembler
 <h2>English:</h2><br>
-This program will disassemble (from binary or hex codes) most of the RVIMFD64 ISA binary instructions into Assembly ones.
+This program will disassemble/decode (from binary or hex codes) most of the RVIMFD64 ISA 32-bit binary instructions into the related (and understandable) assembly commands, in addition to detect the instruction type, the binary instruction will be divided into the fields the format is made of.
+
 
 The reason why this exists (and why it looks something slightly too "raw" to be released) was me trying to learn instruction formats to pursue a Computer Architecture exam.
 Long story short, here it is.
 <br>
 <br>
 
+<h3>Installation? Requirements?</h3>
+None. This program will just do string and math operations and use some std::map(s) as opcode-to-format dictionaries to decode instructions, pretty much any C++ compiler on any OS will be able to produce a working executable: just get RISCV.cpp into yours and compile.<br>
+Of course, i know most of those interested in this program will likely have Windows as OS, be students and not belong to the "obnoxious nerd" kind that haunts this website, and might even not know what to do with the RISCV.cpp file, so don't worry, <b>as long as you trust me you can download the ready-made program (for Windows) on the Release section.</b>
+<br>
 <h3>How does it work?</h3><br>
-Simple. Either paste in input a 32-bit long instruction, press ENTER and watch it translate.
+You may run the executable, and either paste in input a 32-bit long instruction, press ENTER and watch it translate.
 The program will load itself with a ready-made example.
 In detail: either input something in binary like "00000010000010010011001010000011" or in hex, like: "0x2093283".<b> And remember the "0x" if you input in HEX, at the beginning, it helps the program understand that what you've given it's in hex.</b>
 <br>
