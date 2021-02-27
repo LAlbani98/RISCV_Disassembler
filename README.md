@@ -15,7 +15,7 @@ Of course, i know most of those interested in this program will likely have Wind
 <h3>How does it work?</h3>
 Simple: run the executable (that you can even download in the Release section), and either paste a binary or HEX (starting with 0x) 32-bit long instruction, press ENTER and watch it translate.
 The program will load itself with a ready-made example of what the output will look like.
-In detail: either input something in binary like "00000010000010010011001010000011" or in hex, like: "0x2093283".<b> And remember the "0x" at the beginning of the instruction if you input one in HEX format, it helps the program understand that what you've given it's in hex.</b>
+In detail: either input something in binary like <pre>00000010000010010011001010000011</pre> or in hex, like: <pre>0x2093283</pre>.<b> And remember the "0x" at the beginning of the instruction if you input one in HEX format, it helps the program understand that what you've given it's in hex.</b>
 <br>
 <br>
 <h3>Cool, but i have an entire file full of codes to translate, sounds boring, eh?</h3>
@@ -123,7 +123,7 @@ DOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN.
  [ASSEMBLY (Via RegNum)]: srli x5, x4, 2
  [ASSEMBLY (Via RegName)]: srli t0, tp, 2
 
-   SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE
+   SRAI/SRLI  SHAMT    RS1   FUNC3    RD     OPCODE
   [ 000000 | 000010 | 00100 | 101 | 00101 | 0010011 ] </pre>
 
 
