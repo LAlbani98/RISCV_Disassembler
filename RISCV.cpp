@@ -400,7 +400,7 @@ do{
 			Inbound.open(filename);
 			filename += ".out";
 			Outbound.open(filename,std::ios_base::app);
-			Inbound>>tempInstruction;
+			//Inbound>>tempInstruction;
 		}
 		/*PREPARING UNIQUE OUTBOUND STREAM*/
 		std::ostream & OutStream=(fileDetected?  Outbound : std::cout);
@@ -413,7 +413,7 @@ do{
 					Instruction=binaryStringToInt(input);
 				}
 			}else{
-				
+				Inbound>>tempInstruction;
 				tempInstruction= "0x"+tempInstruction;
 				Instruction=hexStringToInt(tempInstruction);
 			}
@@ -891,7 +891,7 @@ do{
 			}
 			
 			InstrCount++;
-			Inbound>>tempInstruction;
+			
 		}while(fileDetected && !Inbound.eof());
 		if(fileDetected){ 
 			std::cout<<endl<<" [NOTICE] File successfully scanned. "<<InstrCount<<" instruction(s) detected. "<<InstrOk<<" successfully disassembled."<<endl<<endl;  
