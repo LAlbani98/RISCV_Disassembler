@@ -424,7 +424,7 @@ do{
 			std::bitset<32> x(Instruction);
 			std::bitset<7> y(XOpcode);
 			if(fileDetected){
-				OutStream<<endl<<endl<<"=====================[Instruction No. "<<InstrCount<<" ]=====================";
+				OutStream<<endl<<endl<<"==========================================================";
 			}
 			else{
 				OutStream<<endl<<endl<<"=========================[ RESULTS: ]=====================";
@@ -475,7 +475,7 @@ do{
 						OutStream<<endl<<" [ERROR] The instruction type has been detected as \"I\" with opcode 0x13 (i.e addi/subi etc. Category) but func3 code matches no instruction.\nDOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN."; 
 					}else if(func3_I13[Xfunc3]!="srai"){
 						OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<func3_I13[Xfunc3]<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<Imm12;
-						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I13[Xfunc3]<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<Imm12;
+						OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<func3_I13[Xfunc3]<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<Imm12;
 						
 						std::bitset<12> ImmA(Imm12);
 						std::bitset<5> Rd(Xrd);
@@ -492,7 +492,7 @@ do{
 						int SHAMT=(Instruction%67108864)/1048576; 
 						int Xfunc6=(Instruction%4294967296)/67108864;
 						string Instruction13_5;
-						if(Xfunc6==32){
+						if(Xfunc6==16){
 							Instruction13_5="srai";
 							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
 							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<SHAMT;
@@ -553,7 +553,7 @@ do{
 						if(Xfunc7==32){
 							Instruction13_5="sraiw";
 							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
-							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;	
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<SHAMT;	
 							InstrOk++;
 							std::bitset<7> Func7(Xfunc7);
 							std::bitset<5> Rd(Xrd);
@@ -567,7 +567,7 @@ do{
 						}else if(Xfunc7==0){
 							Instruction13_5="srliw";
 							OutStream<<endl<<" [ASSEMBLY (Via RegNum)]: "<<Instruction13_5<<" "<<"x"<<Xrd<<", "<<"x"<<Xrs1<<", "<<SHAMT;
-							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<"x"<<Registers[Xrs1]<<", "<<SHAMT;
+							OutStream<<endl<<" [ASSEMBLY (Via RegName)]: "<<Instruction13_5<<" "<<Registers[Xrd]<<", "<<Registers[Xrs1]<<", "<<SHAMT;
 							InstrOk++;
 							std::bitset<7> Func7(Xfunc7);
 							std::bitset<5> Rd(Xrd);
@@ -905,5 +905,5 @@ do{
 		}
 	}while(!fileDetected);
 	
-	
+	return InstrCount;
 }
