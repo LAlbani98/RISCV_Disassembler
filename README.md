@@ -1,4 +1,4 @@
-# RISCV Disassembler (RVIMFD ISA)
+# RISCV Disassembler (RV64IMFD ISA)
 <h2>English:</h2><br>
 This program will disassemble/decode (from binary or hex codes) most of the RVIMFD64 ISA 32-bit binary instructions into the related (and understandable) assembly commands, in addition to detect the instruction type, the binary instruction will be divided into the fields the format is made of.
 
