@@ -8,14 +8,14 @@ Long story short, here it is.
 <h4>How does it work?</h4><br>
 Simple. Either paste in input a 32-bit long instruction, press ENTER and watch it translate.
 The program will load itself with a ready-made example.
-In detail: either input something in binary like "00000010000010010011001010000011" or in hex, like: "0x2093283".<b>(And remember the "0x" if you input in HEX, at the beginning, it helps the program understand that what you've given it's in hex.)</b>
+In detail: either input something in binary like "00000010000010010011001010000011" or in hex, like: "0x2093283".<b> And remember the "0x" if you input in HEX, at the beginning, it helps the program understand that what you've given it's in hex.</b>
 <h4>Cool, but i have an entire file, sounds boring, eh?</h4>
 Nope. Since 1.3 version you may simply do as follows:
 
 RISCV.exe -f instructions.txt
 (Where, of course, instructions.txt is a file filled with HEX format instructions, as at the moment we only support that.)
 The output will be appended to a new file instructions.txt.out!
-
+<b>Warning: this time, you may only insert HEX Instructions WITHOUT 0x at the beginning</b>
 <h6>An example of instruction.txt<h6>:
 <pre>
 2093283
