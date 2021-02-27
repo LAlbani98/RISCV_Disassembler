@@ -17,6 +17,7 @@ RISCV.exe -f instructions.txt
 The output will be appended to a new file instructions.txt.out!
 
 <h6>An example of instruction.txt<h6>:
+<pre>
 2093283
 FFFFF2B3
 FFFFF2B3
@@ -24,7 +25,9 @@ FFFFF223
 FFFFF2B7
 112A93
 225293
+</pre>
 <h6>And output (I intentionally placed some bad instructions) </h6>
+<pre>
 ==========================================================
 
  INSTRUCTION(BIN): 00000010000010010011001010000011
@@ -108,7 +111,7 @@ DOUBLE CHECK WITH RISC-V CODE TABLE AND TRY AGAIN.
  [ASSEMBLY (Via RegName)]: srli t0, tp, 2
 
    SRAI/SRLI SHAMT     RS1   FUNC3    RD     OPCODE
-  [ 000000 | 000010 | 00100 | 101 | 00101 | 0010011 ] 
+  [ 000000 | 000010 | 00100 | 101 | 00101 | 0010011 ] </pre>
 
 
 Any suggestions or bug reporting to be sent either here or lrnz.albani@gmail.com.
