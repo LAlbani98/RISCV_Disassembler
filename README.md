@@ -10,15 +10,15 @@ Long story short, here it is.
 
 <h3>Installation? Requirements?</h3>
 None. This program will just do string and math operations and use some std::map(s) as opcode-to-format dictionaries to decode instructions, pretty much any C++ compiler on any OS will be able to produce a working executable: just get RISCV.cpp into yours and compile.<br>
-Of course, i know most of those interested in this program will likely have Windows as OS, be students and not belong to the "obnoxious nerd" kind that haunts this website, and might even not know what to do with the RISCV.cpp file, so don't worry, <b>as long as you trust me you can download the ready-made program (for Windows) on the Release section.</b>
+Of course, i know most of those interested in this program will likely have Windows as OS, be students and not belong to the "obnoxious nerd" kind that haunts this website, and might even not know what to do with the RISCV.cpp file, so don't worry, <b>as long as you trust me you can download the already compiled, ready-made program (for Windows) on the Release section(on the right column).</b>
 <br>
-<h3>How does it work?</h3><br>
-You may run the executable, and either paste in input a 32-bit long instruction, press ENTER and watch it translate.
-The program will load itself with a ready-made example.
-In detail: either input something in binary like "00000010000010010011001010000011" or in hex, like: "0x2093283".<b> And remember the "0x" if you input in HEX, at the beginning, it helps the program understand that what you've given it's in hex.</b>
+<h3>How does it work?</h3>
+Simple: run the executable (that you can even download in the Release section), and either paste a binary or HEX (starting with 0x) 32-bit long instruction, press ENTER and watch it translate.
+The program will load itself with a ready-made example of what the output will look like.
+In detail: either input something in binary like "00000010000010010011001010000011" or in hex, like: "0x2093283".<b> And remember the "0x" at the beginning of the instruction if you input one in HEX format, it helps the program understand that what you've given it's in hex.</b>
 <br>
 <br>
-<h3>Cool, but i have an entire file, sounds boring, eh?</h3>
+<h3>Cool, but i have an entire file full of codes to translate, sounds boring, eh?</h3>
 Nope. Since 1.3 version you may simply do as follows:
 
 <pre>RISCV.exe -f instructions.txt</pre>
