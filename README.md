@@ -3,7 +3,7 @@
 This program will disassemble/decode (from binary or hex codes) most of the RVIMFD64 ISA 32-bit binary instructions into the related (and understandable) assembly commands, in addition to detect the instruction type, the binary instruction will be divided into the fields the format is made of.
 
 
-The reason why this exists (and why the code looks like too much of a badly designed program to be released) was me trying to learn instruction formats to pass a Computer Architecture exam (Lectures held by Roberto Giorgi, Università di Siena, Siena, Italy) i then tried to fill its holes it as fast as possibile for it to be available to anybody else.
+The reason why this exists (and why the code looks like too much of a badly designed program to be released) was me trying to learn instruction formats to pass a Computer Architecture exam (Lectures held by Roberto Giorgi, Università di Siena, Siena, Italy), so i needed something that could be coded quick, after the exam i then tried to fill its holes as fast as possibile for it to be available to anybody else.
 Long story short, here it is.
 <br>
 <br>
